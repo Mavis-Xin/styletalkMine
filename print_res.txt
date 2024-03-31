@@ -1,0 +1,56 @@
+args Namespace(
+    audio_path='samples/source_video/phoneme/reagan_clip1_seq.json', 
+    output_path='demo_1.mp4', 
+    pose_path='samples/source_video/3DMM/reagan_clip1.mat', 
+    renderer_checkpoint='checkpoints/renderer_checkpoint.pt', 
+    src_img_path='samples/source_video/image/andrew_clip_1.png', 
+    style_clip_path='samples/style_clips/3DMM/happyenglish_clip1.mat', 
+    styletalk_checkpoint='checkpoints/styletalk_checkpoint.pth', 
+    wav_path='samples/source_video/wav/reagan_clip1.wav')
+
+cfg CONTENT_ENCODER:
+  activation: relu
+  d_model: 256
+  dim_feedforward: 1024
+  dropout: 0.1
+  nhead: 8
+  normalize_before: False
+  num_encoder_layers: 3
+  ph_embed_dim: 128
+  pos_embed_len: 11
+CONTENT_ENCODER_TYPE: ContentEncoder
+DATASET:
+  FACE3D_DIM: 64
+DECODER:
+  activation: relu
+  d_model: 256
+  dim_feedforward: 1024
+  dropout: 0.1
+  dynamic_K: 8
+  dynamic_ratio: 4
+  lower_face3d_indices: [0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14]
+  network_type: DynamicFCDecoder
+  nhead: 8
+  normalize_before: False
+  num_decoder_layers: 3
+  pos_embed_len: 11
+  return_intermediate_dec: False
+  upper_face3d_indices: [6, 8, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+DECODER_TYPE: DisentangleDecoder
+DISCRIMINATOR_TYPE: Discriminator
+D_MODEL: 256
+INFERENCE:
+  CHECKPOINT: checkpoints/styletalk_checkpoint.pth
+STYLE_ENCODER:
+  activation: relu
+  aggregate_method: self_attention_pooling
+  d_model: 256
+  dim_feedforward: 1024
+  dropout: 0.1
+  nhead: 8
+  normalize_before: False
+  num_encoder_layers: 3
+  pos_embed_len: 256
+STYLE_ENCODER_TYPE: StyleEncoder
+TAG: style_id_emotion
+WIN_SIZE: 5

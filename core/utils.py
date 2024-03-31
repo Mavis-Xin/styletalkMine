@@ -90,7 +90,8 @@ def get_video_style_clip(video_path, style_max_len, start_idx="random", dtype=to
     else:
         raise ValueError("Invalid 3DMM file extension")
 
-    face3d_exp = torch.tensor(face3d_exp, dtype=dtype)
+    face3d_exp = torch.tensor(face3d_exp, dtype=dtype) 
+    print('face3d_exp', face3d_exp.size())  # torch.Size([135, 64])
 
     length = face3d_exp.shape[0]
     if length >= style_max_len:
@@ -111,6 +112,8 @@ def get_video_style_clip(video_path, style_max_len, start_idx="random", dtype=to
         face3d_clip = torch.cat((face3d_exp, padding), dim=0)
         pad_mask = torch.tensor([False] * length + [True] * (style_max_len - length))
 
+    print('face3d_clip', face3d_clip.size()) # torch.Size([256, 64])
+    print('pad_mask', pad_mask.size()) # torch.Size([256])
     return face3d_clip, pad_mask
 
 

@@ -16,7 +16,9 @@ from configs.default import get_cfg_defaults
 
 @torch.no_grad()
 def get_eval_model(cfg):
+    print('before get_eval_model')
     model = StyleTalk(cfg).cuda()
+    print('after get_eval_model')
     content_encoder = model.content_encoder
     style_encoder = model.style_encoder
     decoder = model.decoder
@@ -106,13 +108,19 @@ def generate_expression_params(
     audio_win = get_audio_window(audio, cfg.WIN_SIZE)
     audio_win = torch.tensor(audio_win).cuda()
     content = content_encoder(audio_win.unsqueeze(0))
+    print('content', content.size()) # torch.Size([1, 780, 11, 256])
 
     style_clip, pad_mask = get_video_style_clip(style_clip_path, style_max_len=256, start_idx=0)
+    print('style_clip', style_clip.size())  # torch.Size([256, 64])
+
     style_code = style_encoder(
         style_clip.unsqueeze(0).cuda(), pad_mask.unsqueeze(0).cuda() if pad_mask is not None else None
     )
+    print('style_code', style_code.size()) # torch.Size([1, 256])
 
+    print('kkkkkkkkk')
     gen_exp_stack = decoder(content, style_code)
+    print('gen_exp_stack', gen_exp_stack.size()) # torch.Size([1, 780, 64])
     gen_exp = gen_exp_stack[0].cpu().numpy()
 
     pose_ext = pose_path[-3:]
@@ -122,6 +130,7 @@ def generate_expression_params(
     elif pose_ext == "mat":
         pose = get_pose_params(pose_path)
     # (L, 9)
+    print('pose', pose.shape) # (780, 9)
 
     selected_pose = None
     if len(pose) >= len(gen_exp):
@@ -130,7 +139,10 @@ def generate_expression_params(
         selected_pose = pose[-1].unsqueeze(0).repeat(len(gen_exp), 1)
         selected_pose[: len(pose)] = pose
 
+    print('selected_pose', selected_pose.shape) # (780, 9)
+    print('gen_exp', gen_exp.shape) # (780, 64)
     gen_exp_pose = np.concatenate((gen_exp, selected_pose), axis=1)
+    print('gen_exp_pose', gen_exp_pose.shape) #  (780, 73)
     np.save(output_path, gen_exp_pose)
 
 
@@ -155,16 +167,20 @@ if __name__ == "__main__":
     parser.add_argument("--wav_path", type=str, default="demo/data/KristiNoem_front_neutral_level1_002.wav")
     parser.add_argument("--output_path", type=str, default="demo_output.npy", help="path for output")
     args = parser.parse_args()
+    print('args', args)
 
     cfg = get_cfg_defaults()
     cfg.INFERENCE.CHECKPOINT = args.styletalk_checkpoint
     cfg.freeze()
+    print('cfg', cfg)
     print(f"checkpoint: {cfg.INFERENCE.CHECKPOINT}")
 
     # load checkpoint
     with torch.no_grad():
         content_encoder, style_encoder, decoder = get_eval_model(cfg)
+        print('after get 3 modules')
         exp_param_path = f"{args.output_path[:-4]}.npy"
+        print('exp_param_path', exp_param_path) # demo_1.npy
         generate_expression_params(
             cfg,
             args.audio_path,
@@ -175,8 +191,10 @@ if __name__ == "__main__":
             style_encoder,
             decoder,
         )
+        print('after generate_expression_params')
 
         image_renderer = get_netG(args.renderer_checkpoint)
+        print('after image_renderer')
         render_video(
             image_renderer,
             args.src_img_path,
@@ -185,3 +203,4 @@ if __name__ == "__main__":
             args.output_path,
             split_size=4,
         )
+        print('after render_video')

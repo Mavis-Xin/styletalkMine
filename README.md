@@ -54,7 +54,7 @@ python inference_for_demo.py \
 --pose_path samples/source_video/3DMM/reagan_clip1.mat \
 --src_img_path samples/source_video/image/andrew_clip_1.png \
 --wav_path samples/source_video/wav/reagan_clip1.wav \
---output_path demo.mp4
+--output_path demo_1.mp4
 ```
 
 Change `audio_path`, `style_clip_path`, `pose_path`, `src_img_path`, `wav_path`, `output_path` to generate more results.

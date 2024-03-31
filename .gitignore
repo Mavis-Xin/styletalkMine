@@ -1,0 +1,7 @@
+checkpoints/
+configs/__pycache__/
+core/__pycache__/
+core/networks/__pycache__/
+generators/__pycache__/
+demo_1.mp4
+demo_1.npy

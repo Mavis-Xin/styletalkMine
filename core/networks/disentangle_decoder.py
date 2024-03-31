@@ -156,29 +156,50 @@ class DisentangleDecoder(nn.Module):
         Returns:
             face3d: (B, L_clip, C_3dmm)
         """
+        print('in decoder')
         B, N, W, C = content.shape
-        style = style_code.reshape(B, 1, 1, C).expand(B, N, W, C)
+        print(B, N, W, C ) # 1 780 11 256
+        print('style 0', style_code.size()) # torch.Size([1, 256])
+        style = style_code.reshape(B, 1, 1, C).expand(B, N, W, C) 
+        print('style 1', style.size()) # torch.Size([1, 780, 11, 256])
         style = style.permute(2, 0, 1, 3).reshape(W, B * N, C)
+        print('style 2', style.size()) # orch.Size([11, 780, 256])
         # (W, B*N, C)
 
+        print('content 0', content.size()) # torch.Size([1, 780, 11, 256])
         content = content.permute(2, 0, 1, 3).reshape(W, B * N, C)
+        print('content 1', content.size()) # torch.Size([11, 780, 256])
+
         # (W, B*N, C)
         tgt = torch.zeros_like(style)
+        print('tgt', tgt.size()) # torch.Size([11, 780, 256])
         pos_embed = self.pos_embed(W)
+        print('pos_embed 1', pos_embed.size()) # torch.Size([1, 11, 256])
         pos_embed = pos_embed.permute(1, 0, 2)
+        print('pos_embed 2', pos_embed.size()) # torch.Size([11, 1, 256])
 
         upper_face3d_feat = self.upper_decoder(tgt, content, pos=pos_embed, query_pos=style)[0]
+        print('upper_face3d_feat 0', upper_face3d_feat.size()) # torch.Size([11, 780, 256])
         # (W, B*N, C)
         upper_face3d_feat = upper_face3d_feat.permute(1, 0, 2).reshape(B, N, W, C)[:, :, W // 2, :]
+        print('upper_face3d_feat 1', upper_face3d_feat.size()) # torch.Size([1, 780, 256])
+
         # (B, N, C)
         upper_face3d = self.upper_tail_fc(upper_face3d_feat)
+        print('upper_face3d', upper_face3d.size()) # torch.Size([1, 780, 51])
         # (B, N, C_exp)
 
         lower_face3d_feat = self.lower_decoder(tgt, content, pos=pos_embed, query_pos=style)[0]
+        print('lower_face3d_feat 1', lower_face3d_feat.size()) # torch.Size([11, 780, 256])
         lower_face3d_feat = lower_face3d_feat.permute(1, 0, 2).reshape(B, N, W, C)[:, :, W // 2, :]
+        print('lower_face3d_feat 2', lower_face3d_feat.size()) # torch.Size([1, 780, 256])
         lower_face3d = self.lower_tail_fc(lower_face3d_feat)
+        print('lower_face3d',lower_face3d.size())  # torch.Size([1, 780, 13])
         C_exp = len(self.upper_face3d_indices) + len(self.lower_face3d_indices)
+        print('C_e', C_exp) # 64
         face3d = torch.zeros(B, N, C_exp).to(upper_face3d)
+
         face3d[:, :, self.upper_face3d_indices] = upper_face3d
         face3d[:, :, self.lower_face3d_indices] = lower_face3d
+        print('face3d', face3d.size()) # torch.Size([1, 780, 64])
         return face3d

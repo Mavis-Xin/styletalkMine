@@ -16,8 +16,9 @@ class StyleTalk(nn.Module):
         cfg.STYLE_ENCODER.input_dim = cfg.DATASET.FACE3D_DIM
         cfg.freeze()
         self.style_encoder = style_encoder_class(**cfg.STYLE_ENCODER)
-
-        decoder_class = get_network(cfg.DECODER_TYPE)
+        
+        
+        decoder_class = get_network(cfg.DECODER_TYPE) # DisentangleDecoder
         cfg.defrost()
         cfg.DECODER.output_dim = cfg.DATASET.FACE3D_DIM
         cfg.freeze()

@@ -109,24 +109,34 @@ class StyleEncoder(nn.Module):
         Returns:
             style_code: (B, C_model)
         """
+        print('x1', x.size()) # torch.Size([1, 256, 64])
         x = self.increase_embed_dim(x)
         # (B, L, C)
+        print('x2', x.size()) # torch.Size([1, 256, 256])
         x = x.permute(1, 0, 2)
+        print('x3', x.size()) # torch.Size([256, 1, 256])
         # (L, B, C)
 
-        pos = self.pos_embed(x.shape[0])
+        pos = self.pos_embed(x.shape[0]) 
+        print('pos 1', pos.size()) # torch.Size([1, 256, 256])
         pos = pos.permute(1, 0, 2)
+        print('pos 2', pos.size()) # torch.Size([256, 1, 256])
         # (L, 1, C)
 
+        print('pad_mask', pad_mask.size()) # torch.Size([1, 256])
         style = self.encoder(x, pos=pos, src_key_padding_mask=pad_mask)
+        print('style', style.size()) # torch.Size([256, 1, 256])
         # (L, B, C)
 
+        print('aggregate_method', self.aggregate_method) # not None
         if self.aggregate_method is not None:
             permute_style = style.permute(1, 0, 2)
             # (B, L, C)
             style_code = self.aggregate_method(permute_style, pad_mask)
+            print('ss', style_code.size()) # torch.Size([1, 256])
             return style_code
 
+        print('pad_mask', pad_mask)
         if pad_mask is None:
             style = style.permute(1, 2, 0)
             # (B, C, L)
@@ -143,6 +153,7 @@ class StyleEncoder(nn.Module):
             style_code = sum_style_code / valid_token_num
             # (B, C)
 
+        print('style_code', style_code.size())
         return style_code
 
 
@@ -207,7 +218,9 @@ class Decoder(nn.Module):
         face3d_feat = self.decoder(tgt, content, pos=pos_embed, query_pos=style)[0]
         # (W, B*N, C)
         face3d_feat = face3d_feat.permute(1, 0, 2).reshape(B, N, W, C)[:, :, W // 2, :]
+        print('face3d_feat 1', face3d_feat.size())
         # (B, N, C)
         face3d = self.tail_fc(face3d_feat)
+        print('face3d', face3d.size())
         # (B, N, C_exp)
         return face3d
